@@ -1,23 +1,27 @@
 {
-  "name": "ometa-js3",
+  "name": "omets-js3",
   "version": "1.0.0",
   "description": "",
-  "main": "step1.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "main": "index.js",
   "scripts": {
-    "dev": "node src/step1.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/maestrow/ometa-js3.git"
+    "start": "ts-node -r tsconfig-paths/register",
+    "build": "webpack --mode development",
+    "build:prod": "webpack --mode production",
+    "tsc": "tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/maestrow/ometa-js3/issues"
-  },
-  "homepage": "https://github.com/maestrow/ometa-js3#readme"
+  "devDependencies": {
+    "clean-webpack-plugin": "4.0.0-alpha.0",
+    "ts-loader": "^9.1.1",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.9.0",
+    "tsconfig-paths-webpack-plugin": "^3.5.1",
+    "tslint": "^6.1.3",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^4.2.4",
+    "webpack": "^5.35.1",
+    "webpack-cli": "^4.6.0"
+  }
 }
