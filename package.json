@@ -1,0 +1,23 @@
+{
+  "name": "ometa-js3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "step1.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "dev": "node src/step1.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maestrow/ometa-js3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maestrow/ometa-js3/issues"
+  },
+  "homepage": "https://github.com/maestrow/ometa-js3#readme"
+}
