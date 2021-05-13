@@ -1,83 +1,9 @@
+import { State } from './state'
+import { IParseResultSuccess, IParseResultFail, IParserFn } from './types'
+import { GrammarAst as AST } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 
-class State {
-
-  private _input: Array<any>
-  private _len: number
-  private _pos: number = 0;
-
-  private savedPos: number[] = [];
-
-  constructor(input: Array<any>) {
-    this._input = input
-    this._len = input.length
-  }
-
-  get input(): Array<any> {
-    return this._input
-  }
-
-  get pos(): number {
-    return this._pos
-  }
-
-  get isEof(): boolean {
-    return this._pos >= this._len
-  }
-
-  get current() {
-    return this._input[this._pos]
-  }
-
-  consume (num: number) {
-    this._pos += num
-    return !this.isEof
-  }
-
-  savePos () {
-    this.savedPos.push(this._pos)
-  }
-
-  backtrack () {
-    this._pos = this.savedPos.pop()
-  }
-
-  acceptPos () {
-    this.savedPos.pop()
-  }
-}
-
-type IParseResultSuccess = {
-  success: true,
-  consumed: number,
-  result: any
-}
-
-type IParseResultFail = {
-  success: false
-}
-
-type IParseResult = IParseResultSuccess | IParseResultFail
-
-type IParserFn = () => IParseResult
-
-// type TParseMethods = 'empty' | 'anything' | 'atomic' | 'rule' | 'seq' | 'alt' | 'many'
-// type IParser = { [key in TParseMethods]: IParserFn }
-
-namespace AST {
-  export type Grammar = Rule[]
-  export type Rule = [string, Expr]
-  export type Expr = ExSeq | ExAlt | ExAtom | ExRule | ExNotLess
-  export type ExSeq = ['seq', Expr[]]
-  export type ExAlt = ['alt', Expr[]]
-
-  export type ExAtom = ['equal', string]
-  export type ExRule = ['rule', string]
-  export type ExNotLess = ['notLess', number, Expr]
-
-}
-
-class Parser {
+export class Parser {
 
   private state: State
 
@@ -203,48 +129,3 @@ class Parser {
   }
 }
 
-
-
-const grammar: AST.Grammar = [
-  ['expr', ['seq', [
-    ['rule', 'group'],
-    ['notLess', 0, ['seq', [
-      ['rule', 'op'],
-      ['rule', 'group']
-    ]]]
-  ]]],
-  ['group', ['alt', [
-    ['seq', [
-      ['equal', '('],
-      ['rule', 'expr'],
-      ['equal', ')'],
-    ]],
-    ['rule', 'num']
-  ]]],
-  ['op', ['alt', [
-    ['equal', '-'],
-    ['equal', '+'],
-    ['equal', '*'],
-    ['equal', '/'],
-  ]]],
-  ['num', ['notLess', 1, ['rule', 'digit']]],
-  ['digit', ['alt', [
-    ['equal', '0'],
-    ['equal', '1'],
-    ['equal', '2'],
-    ['equal', '3'],
-    ['equal', '4'],
-    ['equal', '5'],
-    ['equal', '6'],
-    ['equal', '7'],
-    ['equal', '8'],
-    ['equal', '9'],
-  ]]]
-]
-
-
-const p = new Parser(grammar, [...'((1+2)-3*3)/4'])
-
-const r = p.match('expr')
-
-console.dir(r, {depth: null})
