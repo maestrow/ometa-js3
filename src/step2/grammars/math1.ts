@@ -1,9 +1,21 @@
-import { GrammarAst as AST } from '../grammar-ast'
+import { Ast as AST } from '../grammar-ast'
+
+/*
+
+ometa {
+  expr = group (op group)*,
+  group = '(' expr ')' | num,
+  op = '-'|'+'|'*'|'/',
+  num = digit+,
+  digit = '0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9'
+}
+
+*/
 
 export const math1: AST.Grammar = [
   ['expr', ['seq', [
     ['rule', 'group'],
-    ['notLess', 0, ['seq', [
+    ['times', 0, null, ['seq', [
       ['rule', 'op'],
       ['rule', 'group']
     ]]]
@@ -22,7 +34,7 @@ export const math1: AST.Grammar = [
     ['equal', '*'],
     ['equal', '/'],
   ]]],
-  ['num', ['notLess', 1, ['rule', 'digit']]],
+  ['num', ['times', 1, null, ['rule', 'digit']]],
   ['digit', ['alt', [
     ['equal', '0'],
     ['equal', '1'],

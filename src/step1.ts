@@ -243,7 +243,7 @@ const grammar: AST.Grammar = [
 ]
 
 
-const p = new Parser(grammar, [...'((1+2)-3*3)/4'])
+const p = new Parser(grammar, '((1+2)-3*3)/4' as unknown as any[])
 
 const r = p.match('expr')
 

@@ -27,6 +27,10 @@ export class State {
     return this._input[this._pos]
   }
 
+  at(pos: number) {
+    return this._input[pos]
+  }
+
   consume (num: number) {
     this._pos += num
     return !this.isEof

@@ -1,5 +1,5 @@
 import { Parser } from './parser'
-import { GrammarAst as AST } from './grammar-ast'
+import { Ast as AST } from './grammar-ast'
 import { math1 } from './grammars/math1'
 
 const p = new Parser(math1, [...'((1+2)-3*3)/4'])

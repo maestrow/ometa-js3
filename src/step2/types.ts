@@ -13,3 +13,6 @@ export type IParseResult = IParseResultSuccess | IParseResultFail
 
 export type IParserFn = () => IParseResult
 
+export type IProjectors = {
+  [key: string]: (args: [...any]) => any
+}

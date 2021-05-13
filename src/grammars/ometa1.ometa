@@ -131,8 +131,10 @@ ometa Ometa {
   rule
   equal
   
+  times  
   token
-  times
   not
+  bind
   project
+  range
 }
