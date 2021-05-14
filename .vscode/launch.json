@@ -7,18 +7,6 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug TypeScript in Node.js",
-      "preLaunchTask": "ts: build all",
-      "program": "${file}",
-      "cwd": "${workspaceFolder}",
-      "protocol": "inspector",
-      "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"
-      ]
-    },
-    {
-      "type": "node",
-      "request": "launch",
       "name": "Debug TypeScript with webpack",
       "sourceMaps": true,
       "preLaunchTask": "webpack",

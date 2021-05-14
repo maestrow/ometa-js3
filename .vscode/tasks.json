@@ -37,7 +37,8 @@
                 "run",
                 "build",
                 "--",
-                "${fileBasename}"
+                "--env",
+                "src=${file}"
             ],
             "problemMatcher": []
         }
