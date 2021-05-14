@@ -15,6 +15,9 @@ module.exports = env => ({
       src: getPath('src')
     },
     extensions: ['.ts', '.js'],
+    fallback: {
+      "fs": false
+    },
     plugins: [
       new TsconfigPathsPlugin({ configFile: getPath("tsconfig.json") })
     ]
