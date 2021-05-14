@@ -3,6 +3,7 @@ import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceIt
 import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 import { AsyncParallelBailHook } from 'tapable'
+import { getRuleBodyByName } from './utils'
 
 export class Parser implements Ast.IParser {
 
@@ -32,30 +33,16 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  private getRuleBodyByName = (name: string): Ast.Expr =>
-    this.grammar.find(i => i[0] === name)[1]
-
   trace: ITraceItem[] = []
-
-  // === Parsers
-
-  rule = (name: string): IParserFn => {
-    
-    const parseFn = this.project(name, this.getRuleBodyByName(name))
-
-    return () => {
-      const res = parseFn()
-      this.trace.push({
-        rule: name,
-        pos: this.state.pos,
-        success: res.success
-      })
-      return res
-    }
-  }
 
   expr = (e: Ast.Expr): IParserFn => {
     return this[e[0]].apply(this, e.slice(1))
+  }
+
+  // === Parsers
+  
+  rule = (name: string): IParserFn => {
+    return this.project(name, getRuleBodyByName(name, this.grammar))
   }
 
   empty = (): IParserFn => () => {
@@ -202,7 +189,7 @@ export class Parser implements Ast.IParser {
   // === API
 
   match = (rule: string) => {
-    const p = this.rule(rule)
+    const p = this.expr(['rule', rule])
     return p()
   }
 }

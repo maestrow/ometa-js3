@@ -83,7 +83,7 @@ export const ometa1: AST.Grammar = [
   ]]],
   
   ['eQuant', ['seq', [
-    ['rule', 'not'],
+    ['rule', 'eNot'],
     ['times', 0, 1, ['alt', [
       ['equal', '?'],
       ['equal', '*'],
