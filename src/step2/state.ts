@@ -2,17 +2,22 @@ export class State {
 
   private _input: Array<any>
   private _len: number
-  private _pos: number = 0;
-
+  private _pos: number = 0
+  private _inputIsString: boolean
   private savedPos: number[] = [];
 
   constructor(input: Array<any>) {
     this._input = input
     this._len = input.length
+    this._inputIsString = typeof(input) === 'string'
   }
 
   get input(): Array<any> {
     return this._input
+  }
+
+  get len(): number {
+    return this._len
   }
 
   get pos(): number {
@@ -25,6 +30,17 @@ export class State {
 
   get current() {
     return this._input[this._pos]
+  }
+
+  get isString() {
+    return this._inputIsString
+  }
+
+  get inputAsString() {
+    if (!this.isString) {
+      throw new Error("inputAsString can be invoked only on string input");
+    }
+    return this.input as unknown as string
   }
 
   at(pos: number) {

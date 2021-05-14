@@ -4,10 +4,13 @@ import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 import { AsyncParallelBailHook } from 'tapable'
 import { getRuleBodyByName } from './utils'
+import { Tracer } from './tracer'
 
 export class Parser implements Ast.IParser {
 
   private state: State
+
+  public trace: Tracer = new Tracer()
 
   private grammar: Ast.Grammar
 
@@ -33,10 +36,17 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  trace: ITraceItem[] = []
-
   expr = (e: Ast.Expr): IParserFn => {
-    return this[e[0]].apply(this, e.slice(1))
+    const fn: IParserFn = this[e[0]].apply(this, e.slice(1))
+    return () => {
+      this.trace.start(e, this.state.pos)
+      const res = fn()
+      if (res.success) {
+        this.state.consume(res.consumed)
+      }
+      this.trace.complete(res, this.state.pos)
+      return res
+    }
   }
 
   // === Parsers
@@ -57,9 +67,17 @@ export class Parser implements Ast.IParser {
   }
 
   equal = (item: any): IParserFn => () => {
-    if (equal(item, this.state.current)) {
-      this.state.consume(1)
-      return this.success(1, item)
+    if (this.state.isString && typeof(item) === 'string') {
+      if (this.state.pos + item.length <= this.state.len) {
+        const excerpt = this.state.inputAsString.substr(this.state.pos, item.length)
+        if (excerpt === item) {
+          return this.success(excerpt.length, item)
+        }
+      }
+    } else {
+      if (equal(item, this.state.current)) {
+        return this.success(1, item)
+      }
     }
     return this.fail()
   }
@@ -143,8 +161,8 @@ export class Parser implements Ast.IParser {
   }
 
   project = (projector: string, expr: Ast.Expr): IParserFn => () => {
-    const p = this.expr(expr)
-    const r = p()
+    const parseFn = this.expr(expr)
+    const r = parseFn()
     if (!r.success) {
       return r
     }
@@ -152,16 +170,19 @@ export class Parser implements Ast.IParser {
     const proj = this.projectors[projector]
     if (proj) {
       const res = proj(r.result)
-      return this.success(r.consumed, res)
+      return this.success(0, res)
     } else {
       return r
     }
   }
 
   regex = (regex: string): IParserFn => {
-    const rx = new RegExp(regex).compile()
+    const rx = new RegExp(regex)
     if (typeof (this.state.input) !== 'string') {
       throw new Error("regex can be used only if input sequence is string");
+    }
+    if (!this.state.isString) {
+      throw new Error("regex rule can be used only on **string** input stream");
     }
     return () => {
       const s = (this.state.input as unknown as string).substring(this.state.pos)

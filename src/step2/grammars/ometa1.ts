@@ -13,7 +13,7 @@ ometa Ometa1 {
   eTop    = eAlt,
   eAlt    = eProj ("|" eProj)*,
   eProj   = eSeq ("->" ident)?,
-  eSeq    = eQuant (spaces quant)*,
+  eSeq    = eQuant (spaces1 quant)*,
   eQuant  = eNot ('?' | '*' | '+')?,
   eNot    = '~'? operand,
 
@@ -30,17 +30,19 @@ ometa Ometa1 {
   eToken  = "\"" (~'"' anything)* '"',
   eRegex  = "/" (~'/' anything)* '/' a-z*,
 
-  ident  = letter alphanum*,
+  ident  = spaces letter alphanum*,
 
   alphanum = letter | digit,
   digit    = 0-9,
   letter   = A-Z | a-z,
 
-  spaces    = /\s+/,
-  space     = /\s/,
-  inlSpaces = /[ \t]+/, 
-  inlSpace  = /[ \t]/,
-  newline   = /(\r\n)|\n/,
+  spaces     = /\s* /,
+  spaces1    = /\s+/,
+  space      = /\s/,
+  inlSpaces  = /[ \t]* /, 
+  inlSpaces1 = /[ \t]+/, 
+  inlSpace   = /[ \t]/,
+  newline    = /(\r\n)|\n/,
 }
 
 */
@@ -79,7 +81,7 @@ export const ometa1: AST.Grammar = [
   
   ['eSeq', ['seq', [
     ['rule', 'eQuant'],
-    ['times', 0, null, ['seq', [['rule', 'spaces'], ['rule', 'eQuant']]]],
+    ['times', 0, null, ['seq', [['rule', 'spaces1'], ['rule', 'eQuant']]]],
   ]]],
   
   ['eQuant', ['seq', [
@@ -135,6 +137,7 @@ export const ometa1: AST.Grammar = [
   ]]],
   
   ['ident', ['seq', [
+    ['rule', 'spaces'],
     ['rule', 'letter'],
     ['times', 0, null, ['rule', 'alphanum']]
   ]]],
@@ -148,11 +151,15 @@ export const ometa1: AST.Grammar = [
     ['range', 'a', 'z'],
   ]]],
   
-  ['spaces', ['regex', '\\s+']],
+  ['spaces', ['regex', '\\s*']],
+
+  ['spaces1', ['regex', '\\s+']],
   
   ['space', ['regex', '\\s']],
   
-  ['inlSpaces', ['regex', '[ \\t]+']],
+  ['inlSpaces', ['regex', '[ \\t]*']],
+
+  ['inlSpaces1', ['regex', '[ \\t]+']],
   
   ['inlSpace', ['regex', '[ \\t]']],
   
