@@ -19,6 +19,7 @@ export namespace Ast {
     | Ex.Project
     | Ex.Regex
     | Ex.Range
+    | Ex.Anything
 
   type ExprToStr<T> = T extends Expr[]
     ? string[]
@@ -63,5 +64,6 @@ export namespace Ast {
     export type Project = ['project', string, Expr]
     export type Regex = ['regex', string]
     export type Range = ['range', string, string]
+    export type Anything = ['anything']
   }  
 }

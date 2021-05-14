@@ -53,6 +53,7 @@ export class Templates implements Ast.ITemplator {
   project = (name: string, expr: string) => `${expr} -> ${name}`
   regex = (value: string) => `/${value}/`
   range = (from: string, to: string) => `${from}-${to}`
+  anything = () => 'anything'
 }
 
 export class TemplatesTrace extends Templates {

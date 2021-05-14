@@ -1,52 +1,6 @@
 import { IProjectors } from 'step2/types'
 import { Ast as AST } from '../grammar-ast'
 
-/*
-
-Выражения располагаются в порядке приоритета (внизу - наибольший приоритет)
-
-
-ometa Ometa1 {
-  ometa = "ometa" ident "{" eRule* "}" spaces,
-  eRule = ident "=" "|"? eTop inlSpaces ',' newline,
-
-  eTop    = eAlt,
-  eAlt    = eProj ("|" eProj)*,
-  eProj   = eSeq ("->" ident)?,
-  eSeq    = eQuant (spaces1 quant)*,
-  eQuant  = eNot ('?' | '*' | '+')?,
-  eNot    = '~'? operand,
-
-  operand = 
-    | '(' eTop ') -> op_group
-    | eRange      -> op_range
-    | eStr        -> op_str
-    | eToken      -> op_token
-    | eRegex      -> op_regex
-    | ident       -> op_rule,
-  
-  eRange  = alphanum '-' alphanum,
-  eStr    = "'" (~'\'' anything)* '\'',
-  eToken  = "\"" (~'"' anything)* '"',
-  eRegex  = "/" (~'/' anything)* '/' a-z*,
-
-  ident  = spaces letter alphanum*,
-
-  alphanum = letter | digit,
-  digit    = 0-9,
-  letter   = A-Z | a-z,
-
-  spaces     = /\s* /,
-  spaces1    = /\s+/,
-  space      = /\s/,
-  inlSpaces  = /[ \t]* /, 
-  inlSpaces1 = /[ \t]+/, 
-  inlSpace   = /[ \t]/,
-  newline    = /(\r\n)|\n/,
-}
-
-*/
-
 export const ometa1: AST.Grammar = [
   ['ometa', ['seq', [
     ['token', 'ometa'],
@@ -60,6 +14,7 @@ export const ometa1: AST.Grammar = [
   ['eRule', ['seq', [
     ['rule', 'ident'],
     ['token', '='],
+    ['rule', 'spaces'],
     ['times', 0, 1, ['token', '|']],
     ['rule', 'eTop'],
     ['rule', 'inlSpaces'],
@@ -71,12 +26,12 @@ export const ometa1: AST.Grammar = [
   
   ['eAlt', ['seq', [
     ['rule', 'eProj'],
-    ['times', 0, null, ['seq', [['equal', '|'], ['rule', 'eProj']]]]
+    ['times', 0, null, ['seq', [['token', '|'], ['rule', 'eProj']]]]
   ]]],
   
   ['eProj', ['seq', [
     ['rule', 'eSeq'],
-    ['times', 0, 1, ['seq', [['equal', '->'], ['rule', 'ident']]]],
+    ['times', 0, 1, ['seq', [['token', '->'], ['rule', 'ident']]]],
   ]]],
   
   ['eSeq', ['seq', [
@@ -100,18 +55,19 @@ export const ometa1: AST.Grammar = [
   
   ['operand', ['alt', [
     ['project', 'op_group', ['seq', [
-      ['equal', '('],
+      ['token', '('],
       ['rule', 'eTop'],
-      ['equal', ')'],
+      ['token', ')'],
     ]]],
-    ['project', 'op_range', ['rule', 'eRange']],
-    ['project', 'op_str', ['rule', 'eStr']],
-    ['project', 'op_token', ['rule', 'eToken']],
-    ['project', 'op_regex', ['rule', 'eRegex']],
-    ['project', 'op_rule', ['rule', 'ident']],
+    ['project', 'opRange', ['rule', 'eRange']],
+    ['project', 'opStr', ['rule', 'eStr']],
+    ['project', 'opToken', ['rule', 'eToken']],
+    ['project', 'opRegex', ['rule', 'eRegex']],
+    ['project', 'opRule', ['rule', 'ident']],
   ]]],
   
   ['eRange', ['seq', [
+    ['rule', 'spaces'],
     ['rule', 'alphanum'],
     ['equal', '-'],
     ['rule', 'alphanum'],
@@ -119,19 +75,31 @@ export const ometa1: AST.Grammar = [
   
   ['eStr', ['seq', [
     ['token', '\''],
-    ['times', 0, null, ['seq', [['not', ['equal', '\'']], ['rule', 'anything']]]],
+    ['times', 0, null, ['seq', [
+      ['not', ['equal', '\'']], 
+      ['times', 0, 1, ['equal', '\\']],
+      ['anything']
+    ]]],
     ['equal', '\''],
   ]]],
   
   ['eToken', ['seq', [
     ['token', '"'],
-    ['times', 0, null, ['seq', [['not', ['equal', '"']], ['rule', 'anything']]]],
+    ['times', 0, null, ['seq', [
+      ['not', ['equal', '"']], 
+      ['times', 0, 1, ['equal', '\\']],
+      ['anything']
+    ]]],
     ['equal', '"'],
   ]]],
   
   ['eRegex', ['seq', [
     ['token', '/'],
-    ['times', 0, null, ['seq', [['not', ['equal', '/']], ['rule', 'anything']]]],
+    ['times', 0, null, ['seq', [
+      ['not', ['equal', '/']], 
+      ['times', 0, 1, ['equal', '\\']],
+      ['anything']
+    ]]],
     ['equal', '/'],
     ['times', 0, null, ['range', 'a', 'z']],
   ]]],

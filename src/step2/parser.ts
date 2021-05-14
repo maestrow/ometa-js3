@@ -36,6 +36,9 @@ export class Parser implements Ast.IParser {
     }
   }
 
+  // ToDo: translate Если ф-ция парсера вызывает другую ф-цию парсера, то успешный результат вложенного парсера нельзя пробрасывать наверх. 
+  // Иначе может произойти двойной консум
+
   expr = (e: Ast.Expr): IParserFn => {
     const fn: IParserFn = this[e[0]].apply(this, e.slice(1))
     return () => {
@@ -107,7 +110,7 @@ export class Parser implements Ast.IParser {
       const r = p()
       if (r.success) {
         this.state.acceptPos()
-        return r
+        return this.success(0, r.result)
       }
       this.state.backtrack()
     }
@@ -143,10 +146,7 @@ export class Parser implements Ast.IParser {
 
   token = (token: string): IParserFn => {
     const e: Ast.Expr = ['seq', [
-      ['times', 0, null, ['alt', [
-        ['equal', ' '],
-        ['equal', '\t']
-      ]]],
+      ['times', 0, null, ['regex', '\\s+']],
       ['equal', token]
     ]]
     return this.expr(e)
@@ -172,11 +172,12 @@ export class Parser implements Ast.IParser {
       const res = proj(r.result)
       return this.success(0, res)
     } else {
-      return r
+      return this.success(0, r.result)
     }
   }
 
   regex = (regex: string): IParserFn => {
+    regex = regex.startsWith('^') ? regex : '^' + regex
     const rx = new RegExp(regex)
     if (typeof (this.state.input) !== 'string') {
       throw new Error("regex can be used only if input sequence is string");

@@ -14,7 +14,7 @@ pos(....): qwws
 import { Ast } from "./grammar-ast";
 import { IParseResult } from "./types";
 
-interface TraceItem {
+export interface TraceItem {
   expr: any,
   // Position before expression apply
   startPos: number,
