@@ -1,10 +1,10 @@
 import { State } from './state'
-import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors } from './types'
+import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceItem } from './types'
 import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 import { AsyncParallelBailHook } from 'tapable'
 
-export class Parser {
+export class Parser implements Ast.IParser {
 
   private state: State
 
@@ -35,37 +35,27 @@ export class Parser {
   private getRuleBodyByName = (name: string): Ast.Expr =>
     this.grammar.find(i => i[0] === name)[1]
 
+  trace: ITraceItem[] = []
+
   // === Parsers
 
   rule = (name: string): IParserFn => {
-    return this.project(name, this.getRuleBodyByName(name))
+    
+    const parseFn = this.project(name, this.getRuleBodyByName(name))
+
+    return () => {
+      const res = parseFn()
+      this.trace.push({
+        rule: name,
+        pos: this.state.pos,
+        success: res.success
+      })
+      return res
+    }
   }
 
   expr = (e: Ast.Expr): IParserFn => {
-    switch (e[0]) {
-      case 'equal':
-        return this.equal(e[1])
-      case 'rule':
-        return this.rule(e[1])
-      case 'alt':
-        return this.alt(e[1])
-      case 'seq':
-        return this.seq(e[1])
-      case 'times':
-        return this.times(e[1], e[2], e[3])
-      case 'token':
-        return this.token(e[1])
-      case 'not':
-        return this.not(e[1])
-      case 'project':
-        return this.project(e[1], e[2])
-      case 'regex':
-        return this.regex(e[1])
-      case 'range':
-        return this.range(e[1], e[2])
-      default:
-        throw new Error(`Unknown expression type: ${e[0]}`);
-    }
+    return this[e[0]].apply(this, e.slice(1))
   }
 
   empty = (): IParserFn => () => {

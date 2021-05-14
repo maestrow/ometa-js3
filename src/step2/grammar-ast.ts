@@ -1,3 +1,8 @@
+import { IParserFn } from "./types";
+
+// https://github.com/microsoft/TypeScript/pull/39094 Variadic tuple types
+type DropFirst<T extends readonly unknown[]> = T extends readonly [any?, ...infer U] ? U : [...T];
+
 export namespace Ast {
   export type Grammar = Rule[]
   export type Rule = [string, Expr]
@@ -13,6 +18,8 @@ export namespace Ast {
     | Ex.Project
     | Ex.Regex
     | Ex.Range
+
+  export type IParser = { [T in Expr as T[0]]: (...args: DropFirst<T>) => IParserFn }
 
   export namespace Ex {
     export type Seq = ['seq', Expr[]]

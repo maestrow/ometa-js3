@@ -7,8 +7,8 @@ import { Ast as AST } from '../grammar-ast'
 
 
 ometa Ometa1 {
-  ometa = "ometa" ident "{" eRule* "}",
-  eRule = ident "=" "|"? eTop inlSpaces* ',' newline,
+  ometa = "ometa" ident "{" eRule* "}" spaces,
+  eRule = ident "=" "|"? eTop inlSpaces ',' newline,
 
   eTop    = eAlt,
   eAlt    = eProj ("|" eProj)*,
@@ -45,21 +45,22 @@ ometa Ometa1 {
 
 */
 
-export const ometaExpr: AST.Grammar = [
+export const ometa1: AST.Grammar = [
   ['ometa', ['seq', [
     ['token', 'ometa'],
     ['rule', 'ident'],
     ['token', '{'],
     ['times', 0, null, ['rule', 'eRule']],
     ['token', '}'],
+    ['rule', 'spaces']
   ]]],
   
-  ['rule', ['seq', [
+  ['eRule', ['seq', [
     ['rule', 'ident'],
     ['token', '='],
     ['times', 0, 1, ['token', '|']],
     ['rule', 'eTop'],
-    ['times', 0, null, ['rule', 'inlSpaces']],
+    ['rule', 'inlSpaces'],
     ['equal', ','],
     ['rule', 'newline'],
   ]]],
