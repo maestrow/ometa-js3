@@ -135,6 +135,34 @@ export const ometa1: AST.Grammar = [
 ]
 
 
-export const proj: IProjectors = {
+const x = (value) => value.reduce((acc, i) => {
+  return acc + i[1]||[].join('') + i[2]
+}, '')
 
+export const proj: IProjectors = {
+  ometa: ([_, ident, _2, rules]) => rules,
+  
+  eAlt: ([first, rest]) => rest ? ['alt', [first, ...rest]] : first,
+  eProj: ([value, proj]) => proj ? ['project', proj[1], value] : value,
+  eSeq: ([first, rest]) => rest ? ['seq', [first, ...rest]] : first,
+  eQuant: ([value, op]) => {
+    if (op) {
+      return op[0] === '*' ? ['times', 0, null, value] 
+            : op[0] === '+' ? ['times', 1, null, value] 
+            : op[0] === '?' ? ['times', 0, 1, value]
+            : value
+    } else {
+      return value
+    }
+  },
+  eNot: ([op, value]) => op ? ['not', value] : value,
+
+  opGroup: ([_1, value]) => ['seq', value],  
+  opRule: ([ident]) => ['rule', ident],
+
+  eRange: ([_1, from, _2, to]) => ['range', from, to],
+  eStr: ([_1, value]) => ['equal', x(value)],
+  eToken: ([_1, value]) => ['token', x(value)],
+  eRegex: ([_1, value, _2, modif]) => ['regex', x(value)],
+  ident: ([_, first, rest]) => first + rest.join(''),
 }
