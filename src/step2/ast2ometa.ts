@@ -67,6 +67,10 @@ export class TemplatesTrace extends Templates {
   }
 }
 
+
+// ToDo: Почему Compiler - это отдельная сущность, а не IProjectors?!
+// После реализации сопоставления на массивы, следует переписать компилятор на грамматику с IProjectors.
+
 export class Compiler {
   templates: Ast.ITemplator
 
@@ -81,6 +85,7 @@ export class Compiler {
   * 2) if arg is array and the first element is not a string, then this is an array of expressions.
   * Later, when grammar expressions will accept arrays (which are not expressions) as arguments, 
   * then the algorithm will need to be rewritten.
+  * ToDo: will it actually can happens?
   */
   compileExpr = (e: Ast.GenericExpr, level: number = 0): string => {
     const args = e.slice(1).map(i =>

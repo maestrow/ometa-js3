@@ -24,4 +24,4 @@ const disco = new TraceDiscovery(ometa1, input, p.trace.data)
 const trace = disco.convert()
 
 //console.dir(trace, {depth: null})
-fs.writeFileSync("./trace.json", JSON.stringify(trace, null, 2))
+fs.writeFileSync("./dist/trace.json", JSON.stringify(trace, null, 2))
