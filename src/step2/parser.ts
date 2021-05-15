@@ -64,7 +64,7 @@ export class Parser implements Ast.IParser {
 
   anything = (): IParserFn => () => {
     if (!this.state.isEof) {
-      return this.success(1)
+      return this.success(1, this.state.current)
     }
     return this.fail()
   }
@@ -136,7 +136,7 @@ export class Parser implements Ast.IParser {
         }
       } else {
         if (count >= min) {
-          return this.success(0, results)
+          return this.success(0, results.length === 0 ? undefined : results)
         } else {
           return this.fail()
         }
@@ -149,7 +149,14 @@ export class Parser implements Ast.IParser {
       ['times', 0, null, ['regex', '\\s+']],
       ['equal', token]
     ]]
-    return this.expr(e)
+    const parseFn = this.expr(e)
+    return () => {
+      const r = parseFn()
+      if (r.success) {
+        return this.success(0, r.result[1])
+      }
+      return this.fail()
+    }
   }
 
   not = (expr: Ast.Expr): IParserFn => () => {
