@@ -2,7 +2,6 @@ import { State } from './state'
 import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceItem } from './types'
 import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
-import { AsyncParallelBailHook } from 'tapable'
 import { getRuleBodyByName } from './utils'
 import { Tracer } from './tracer'
 
