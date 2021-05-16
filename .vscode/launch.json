@@ -5,17 +5,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
+      "type": "pwa-node",
       "request": "launch",
-      "name": "Debug TypeScript with webpack",
-      "sourceMaps": true,
-      "preLaunchTask": "webpack",
+      "name": "Launch Program",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
       "program": "${file}",
-      "cwd": "${workspaceFolder}",
-      "protocol": "inspector",
+      "preLaunchTask": "${defaultBuildTask}",
       "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"
+        "${workspaceFolder}/dist/*.js"
       ]
-    },
+    }
   ]
 }
