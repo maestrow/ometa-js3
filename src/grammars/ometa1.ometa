@@ -1,140 +1,38 @@
-// Without Left recursion
-{
-  const bounds = {
-    '{': '}',
-    '(': ')',
-    '[': ']'
-  }
-}
+ometa Ometa1 {
+  ometa = "ometa" ident "{" eRule* "}" spaces,
+  eRule = ident "=" spaces "|"? eTop inlSpaces ',' newline,
 
-ometa Ometa {
-  programm = "ometa" ident "{" rule* "}"
-  rule = ident arg* "=" "|"? expr eol
+  eTop    = eAlt,
+  eAlt    = eProj ("|" eProj)*,
+  eProj   = eSeq ("->" ident)?,
+  eSeq    = eQuant (spaces1 quant)*,
+  eQuant  = eNot ('?' | '*' | '+')?,
+  eNot    = '~'? operand,
+
+  operand = 
+    | "(" eTop ")" -> opGroup
+    | eRange       -> opRange
+    | eStr         -> opStr
+    | eToken       -> opToken
+    | eRegex       -> opRegex
+    | ident        -> opRule,
   
-  // === Lower order rules (doesn't receive parsers as args)
-  // doesn't need to backtrack upper rule
-  eLowerOrder = eRegex | eRange | eToken | eString
-  eRegex = '/' ~'/' '/' letter*                  // ToDo: escaped \/
-  eRange = alphanum '-' alphanum
-  eToken = '"' (~'"')* '"'                       // ToDo: escaped \"
-  eString = '\'' (~'\'')* '\''                   // ToDo: escaped \'
+  eRange  = spaces alphanum '-' alphanum,
+  eStr    = "'" (~'\'' '\\'? anything)* '\'',
+  eToken  = "\"" (~'"' '\\'? anything)* '"',
+  eRegex  = "/" (~'/' '\\'? anything)* '/' a-z*,
 
-  // Quantifiers
-  eQuant = eAny | eMany | eMany1 | eTimes
-  eAny = group '?'
-  eMany = group '*'
-  eMany1 = group '+'
-  eTimes = group '{' int? "," int? "}"
+  ident  = spaces letter alphanum*,
 
+  alphanum = letter | digit,
+  digit    = 0-9,
+  letter   = A-Z | a-z,
 
-  eSingle = eQuant | eRule | eArray | eLowerOrder
-
-  expr = 
-    | eAlt
-    | eGroup
-    | eSeq 
-    | eQuant    // Quantifiers
-    | eRule 
-    | eProj
-    | eEval
-    | ePredicate
-    | eArg
-    | eArray
-    | eLowerOrder
-
-  // === Higher order rules
-  eAlt = eSeq ('|' eSeq)+
-  eSeq = group (inlineSpace+ group)*
-  eGroup = "(" expr ")" | eSingle
-  
-  eSingle = eAny | eMany | eMany1 | 
-
-
-  
-  eRule = ident ( '(' jsExpr (',' jsExpr)* ')' )?
-  
-  eProj = expr "->" space* jsStmts
-  eEval = '{' jsStmts '}'
-  ePredicate = '?' jsStmts
-  eArg = expr? ':' ident
-  eArray = '[' expr (',' expr)* ']'
-  
-  jsExpr = /\S+/                                 // ToDo: Parse JS expression
-  jsStmts = /\S+/                                // ToDo: parse JS statements
-  
-
-
-
-  ident = letter (alphanum | '_')*
-}
-
-ometa Ometa {
-  any = rule '?' -> {0,1}
-  many = rule '*' -> {0,}
-  many1 = rule '+' -> {1,}
-  lookahead = ~~...
-  regex = /.../..
-  range = X-Y
-  eof = ~anything
-}
-
-ometa Ometa {
-  programm = "ometa" ident "{" rule* "}"
-  rule = ident arg* "=" "|"? expr eol
-  seq
-  alt
-  rule
-  equal
-  times
-  not = '~' 
-
-  expr = 
-    | eAlt
-    | eSeq
-    | eGroup
-    | eArg
-    | eProj
-
-  alt = seq '|' seq
-  seq = group (space+ group)*
-  group = '(' expr ')' | eLowerOrder
-
-  // === Lower order rules (doesn't receive parsers as args)
-  // doesn't need to backtrack upper rule
-  eLowerOrder = eRegex | eRange | eToken | eString
-  eRegex = '/' ~'/' '/' letter*                  // ToDo: escaped \/
-  eRange = alphanum '-' alphanum
-  eToken = '"' (~'"')* '"'                       // ToDo: escaped \"
-  eString = exToken | exString
-  eArray
-
-  ident = letter (alphanum | '_')*
-}
-
-ometa Ometa {
-  int = digit+
-  alphanum = letter | digit
-  letter = A-Z | a-z
-  digit = 0-9
-  eol = inlineSpace* (newline | eof)
-  inlineSpace = ' ' | '\t'
-  newline = '\r' '\n' | '\n'
-  spaces = /\s+/
-  space = /\s/
-}
-
-{
-  empty
-  anything
-  seq
-  alt
-  rule
-  equal
-  
-  times  
-  token
-  not
-  bind
-  project
-  range
+  spaces     = /\s*/,
+  spaces1    = /\s+/,
+  space      = /\s/,
+  inlSpaces  = /[ \t]*/, 
+  inlSpaces1 = /[ \t]+/, 
+  inlSpace   = /[ \t]/,
+  newline    = /(\r\n)|\n/,
 }
