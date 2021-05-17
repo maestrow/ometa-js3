@@ -26,7 +26,7 @@ export class Parser implements Ast.IParser {
     this.projectors = proj
   }
 
-  private success(consumed: number = 0, result: any = null): IParseResultSuccess {
+  private success(result: any = null, consumed: number = 0): IParseResultSuccess {
     return {
       success: true,
       consumed,
@@ -38,6 +38,19 @@ export class Parser implements Ast.IParser {
     return {
       success: false
     }
+  }
+
+  private savePos() {
+    this.state.savePos()
+  }
+
+  private backtrack() {
+    this.state.backtrack()
+  }
+
+  private accept(result: any) {
+    this.state.acceptPos()
+    return this.success(result)
   }
 
   applyProj = (name: string, value: any) => (this.projectors[name] || idFn)(value)
@@ -76,9 +89,13 @@ export class Parser implements Ast.IParser {
     return this.success()
   }
 
+  value = (v: any): IParserFn => () => {
+    return this.success(v)
+  }
+
   anything = (): IParserFn => () => {
     if (!this.state.isEof) {
-      return this.success(1, this.state.current)
+      return this.success(this.state.current, 1)
     }
     return this.fail()
   }
@@ -88,12 +105,12 @@ export class Parser implements Ast.IParser {
       if (this.state.pos + item.length <= this.state.len) {
         const excerpt = this.state.inputAsString.substr(this.state.pos, item.length)
         if (excerpt === item) {
-          return this.success(excerpt.length, item)
+          return this.success(item, excerpt.length)
         }
       }
     } else {
       if (equal(item, this.state.current)) {
-        return this.success(1, item)
+        return this.success(item, 1)
       }
     }
     return this.fail()
@@ -104,18 +121,17 @@ export class Parser implements Ast.IParser {
     
     return () => {
       const results: any[] = []
-      this.state.savePos()
+      this.savePos()
       for (let i = 0; i < parsers.length; i++) {
         const p = parsers[i];
         const r = p()
         if (!r.success) {
-          this.state.backtrack()
+          this.backtrack()
           return this.fail()
         }
         results.push(r.result)
       }
-      this.state.acceptPos()
-      return this.success(0, results)
+      return this.accept(results)
     }
   }
 
@@ -124,14 +140,13 @@ export class Parser implements Ast.IParser {
     
     return () => {
       for (let i = 0; i < exprs.length; i++) {
-        this.state.savePos();
+        this.savePos();
         const p = parsers[i];
         const r = p()
         if (r.success) {
-          this.state.acceptPos()
-          return this.success(0, r.result)
+          return this.accept(r.result)
         }
-        this.state.backtrack()
+        this.backtrack()
       }
       return this.fail()
     }
@@ -154,11 +169,11 @@ export class Parser implements Ast.IParser {
           results.push(r.result)
           count++
           if (count == max) {
-            return this.success(0, results)
+            return this.success(results)
           }
         } else {
           if (count >= min) {
-            return this.success(0, results.length === 0 ? undefined : results)
+            return this.success(results.length === 0 ? undefined : results)
           } else {
             return this.fail()
           }
@@ -177,7 +192,7 @@ export class Parser implements Ast.IParser {
     return () => {
       const r = parseFn()
       if (r.success) {
-        return this.success(0, r.result[1])
+        return this.success(r.result[1])
       }
       return this.fail()
     }
@@ -187,10 +202,10 @@ export class Parser implements Ast.IParser {
     const p = this.expr(expr)
 
     return () => {
-      this.state.savePos()
+      this.savePos()
       const r = p()
-      this.state.backtrack()
-      return r.success ? this.fail() : this.success(0)
+      this.backtrack()
+      return r.success ? this.fail() : this.success()
     }
   }
 
@@ -202,7 +217,7 @@ export class Parser implements Ast.IParser {
       if (!r.success) {
         return r
       }
-      return this.success(0, this.applyProj(projector, r.result))
+      return this.success(this.applyProj(projector, r.result))
     }
   }
 
@@ -215,11 +230,12 @@ export class Parser implements Ast.IParser {
     if (!this.state.isString) {
       throw new Error("regex rule can be used only on **string** input stream");
     }
+
     return () => {
       const s = (this.state.input as unknown as string).substring(this.state.pos)
       const m = rx.exec(s)
       if (m) {
-        return this.success(m[0].length, m[0])
+        return this.success(m[0], m[0].length)
       }
       return this.fail()
     }
@@ -232,7 +248,7 @@ export class Parser implements Ast.IParser {
     return () => {
       let item: any = this.state.current
       if (item >= from && item <= to) {
-        return this.success(1, item)
+        return this.success(item, 1)
       }
       return this.fail()
     }
