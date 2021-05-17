@@ -1,6 +1,6 @@
-import { Ast } from "step2/grammar-ast";
-import { TraceItem } from "step2/tracer";
-import { Compiler, Templates, TemplatesTrace } from "step2/ast2ometa";
+import { Ast } from "../grammar-ast";
+import { TraceItem } from "../tracer";
+import { Compiler, Templates, TemplatesTrace } from "../ast2ometa";
 
 export class TraceDiscovery {
 

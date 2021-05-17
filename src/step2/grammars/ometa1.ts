@@ -1,4 +1,4 @@
-import { IProjectors } from 'step2/types'
+import { IProjectors } from '../types'
 import { Ast as AST } from '../grammar-ast'
 
 export const ometa1: AST.Grammar = [
