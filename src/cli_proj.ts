@@ -7,8 +7,8 @@ import { TraceDiscovery } from "./utils/trace-discover";
 const input = fs.readFileSync('src/step2/grammars/ometa1.ometa', 'utf-8')
 
 
-const p = new Parser(ometa1, input as unknown as any[], proj)
-const r = p.match('ometa')
+const p = new Parser(ometa1, proj)
+const r = p.match(input as unknown as any[], 'ometa')
 
 
 console.dir(r, {depth: null})

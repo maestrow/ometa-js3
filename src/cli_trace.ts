@@ -11,8 +11,8 @@ const input = fs.readFileSync('src/grammars/ometa1.ometa', 'utf-8')
 //const p = new Parser(math1, [...'((1+2)-3*3)/4'])
 //const r = p.match('expr')
 
-const p = new Parser(ometa1, input as unknown as any[], proj)
-const r = p.match('ometa')
+const p = new Parser(ometa1, proj)
+const r = p.match(input as unknown as any[], 'ometa')
 
 
 console.dir(r, {depth: null})

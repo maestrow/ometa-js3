@@ -13,9 +13,9 @@ const saveTrace = (p: Parser) => {
 
 const input = fs.readFileSync('src/grammars/ometa1.ometa', 'utf-8')
 
-const p = new Parser(ometa1, input as unknown as any[], proj)
+const p = new Parser(ometa1, proj)
 
-const r = p.match('ometa')
+const r = p.match(input as unknown as any[], 'ometa')
 
 
 console.dir(r, {depth: null})

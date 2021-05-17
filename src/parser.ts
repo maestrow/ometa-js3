@@ -18,11 +18,10 @@ export class Parser implements Ast.IParser {
 
   private projectors: IProjectors
 
-  constructor(gr: Ast.Grammar, input: any[], proj: IProjectors = {}) {
+  constructor(gr: Ast.Grammar, proj: IProjectors = {}) {
     this.expr = this.expr.bind(this)
 
     this.grammar = gr
-    this.state = new State(input)
     this.projectors = proj
   }
 
@@ -256,7 +255,8 @@ export class Parser implements Ast.IParser {
 
   // === API
 
-  match = (rule: string) => {
+  match = (input: any[], rule: string) => {
+    this.state = new State(input)
     const p = this.expr(['rule', rule])
     return p()
   }
