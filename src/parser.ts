@@ -4,6 +4,7 @@ import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 import { getRuleBodyByName } from './utils'
 import { Tracer } from './tracer'
+import { Memoize } from 'typescript-memoize'
 
 const idFn = id => id
 
@@ -18,6 +19,8 @@ export class Parser implements Ast.IParser {
   private projectors: IProjectors
 
   constructor(gr: Ast.Grammar, input: any[], proj: IProjectors = {}) {
+    this.expr = this.expr.bind(this)
+
     this.grammar = gr
     this.state = new State(input)
     this.projectors = proj
@@ -42,13 +45,13 @@ export class Parser implements Ast.IParser {
   // ToDo: translate Если ф-ция парсера вызывает другую ф-цию парсера, то успешный результат вложенного парсера нельзя пробрасывать наверх. 
   // Иначе может произойти двойной консум
 
-  expr = (e: Ast.Expr): IParserFn => {
+  @Memoize((...args) => JSON.stringify(args))
+  expr (e: Ast.Expr): IParserFn {
     const combinator = this[e[0]]
     if (typeof(combinator) !== 'function') {
       throw new Error(`There is no core combinator with name: '${e[0]}'`)
     }
     const fn: IParserFn = combinator.apply(this, e.slice(1))
-    
     
     return () => {
       this.trace.start(e, this.state.pos)
@@ -64,7 +67,9 @@ export class Parser implements Ast.IParser {
   // === Parsers
   
   rule = (name: string): IParserFn => {
-    return this.project(name, getRuleBodyByName(name, this.grammar))
+    const e = getRuleBodyByName(name, this.grammar)
+
+    return () => this.project(name, e)()
   }
 
   empty = (): IParserFn => () => {
@@ -95,7 +100,7 @@ export class Parser implements Ast.IParser {
   }
 
   seq = (exprs: Ast.Expr[]): IParserFn => { 
-    const parsers = exprs.map(e => this.expr(e))
+    const parsers = exprs.map(this.expr)
     
     return () => {
       const results: any[] = []
@@ -115,7 +120,7 @@ export class Parser implements Ast.IParser {
   }
 
   alt = (exprs: Ast.Expr[]): IParserFn => { 
-    const parsers = exprs.map(e => this.expr(e))
+    const parsers = exprs.map(this.expr)
     
     return () => {
       for (let i = 0; i < exprs.length; i++) {
