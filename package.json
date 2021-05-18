@@ -4,8 +4,9 @@
   "description": "",
   "scripts": {
     "start": "ts-node -r tsconfig-paths/register",
-    "cli": "ts-node -r tsconfig-paths/register src/step2/cli.ts",
-    "build": "esbuild",
+    "cli": "ts-node -r tsconfig-paths/register src/cli.ts",
+    "esbuild": "esbuild",
+    "build": "esbuild --bundle src/cli.ts --platform=node --outfile=dist/cli.js --sourcemap",
     "test": "jest"
   },
   "keywords": [],

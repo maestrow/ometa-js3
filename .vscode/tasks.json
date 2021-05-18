@@ -9,7 +9,7 @@
           "command": "npm",
           "args": [
               "run",
-              "build",
+              "esbuild",
               "--",
               "--bundle",
               "${relativeFile}",
