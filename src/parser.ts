@@ -8,24 +8,31 @@ import { Memoize } from 'typescript-memoize'
 
 const idFn = id => id
 
+export interface IMatchResult {
+  success: boolean,
+  isEof: boolean,
+  pos: number,
+  result?: any
+}
+
 export class Parser implements Ast.IParser {
 
-  private state: State
+  protected state: State
 
   public trace: Tracer = new Tracer()
 
-  private grammar: Ast.Grammar
+  protected grammar: Ast.GenericGrammar
 
-  private projectors: IProjectors
+  protected projectors: IProjectors
 
-  constructor(gr: Ast.Grammar, proj: IProjectors = {}) {
+  constructor(gr: Ast.GenericGrammar, proj: IProjectors = {}) {
     this.expr = this.expr.bind(this)
 
     this.grammar = gr
     this.projectors = proj
   }
 
-  private success(result: any = null, consumed: number = 0): IParseResultSuccess {
+  protected success(result: any = null, consumed: number = 0): IParseResultSuccess {
     return {
       success: true,
       consumed,
@@ -33,7 +40,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  private fail(): IParseResultFail {
+  protected fail(): IParseResultFail {
     return {
       success: false
     }
@@ -58,7 +65,7 @@ export class Parser implements Ast.IParser {
   // Иначе может произойти двойной консум
 
   @Memoize((...args) => JSON.stringify(args))
-  expr (e: Ast.Expr): IParserFn {
+  expr (e: Ast.GenericExpr): IParserFn {
     const combinator = this[e[0]]
     if (typeof(combinator) !== 'function') {
       throw new Error(`There is no core combinator with name: '${e[0]}'`)
@@ -88,10 +95,6 @@ export class Parser implements Ast.IParser {
     return this.success()
   }
 
-  value = (v: any): IParserFn => () => {
-    return this.success(v)
-  }
-
   anything = (): IParserFn => () => {
     if (!this.state.isEof) {
       return this.success(this.state.current, 1)
@@ -115,7 +118,7 @@ export class Parser implements Ast.IParser {
     return this.fail()
   }
 
-  seq = (exprs: Ast.Expr[]): IParserFn => { 
+  seq = (exprs: Ast.GenericExpr[]): IParserFn => { 
     const parsers = exprs.map(this.expr)
     
     return () => {
@@ -134,7 +137,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  alt = (exprs: Ast.Expr[]): IParserFn => { 
+  alt = (exprs: Ast.GenericExpr[]): IParserFn => { 
     const parsers = exprs.map(this.expr)
     
     return () => {
@@ -151,7 +154,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  times = (min: number, max: number, expr: Ast.Expr): IParserFn => { 
+  times = (min: number, max: number, expr: Ast.GenericExpr): IParserFn => { 
     if (max === null || max === undefined)
       max = Infinity
     if (max < 1) {
@@ -197,7 +200,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  not = (expr: Ast.Expr): IParserFn => { 
+  not = (expr: Ast.GenericExpr): IParserFn => { 
     const p = this.expr(expr)
 
     return () => {
@@ -208,7 +211,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  project = (projector: string, expr: Ast.Expr): IParserFn => { 
+  project = (projector: string, expr: Ast.GenericExpr): IParserFn => { 
     const p = this.expr(expr)
 
     return () => {
@@ -255,10 +258,16 @@ export class Parser implements Ast.IParser {
 
   // === API
 
-  match = (input: any[], rule: string) => {
+  match = (input: any[], rule: string): IMatchResult => {
     this.state = new State(input)
     const p = this.expr(['rule', rule])
-    return p()
+    const res = p()
+    return {
+      success: res.success,
+      isEof: this.state.isEof,
+      pos: this.state.pos,
+      result: res.success ? res.result : undefined
+    }
   }
 }
 

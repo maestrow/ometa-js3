@@ -36,7 +36,7 @@ export class Tracer {
     return this.started !== undefined
   }
 
-  start = (expr: Ast.Expr, startPos: number) => {
+  start = (expr: Ast.GenericExpr, startPos: number) => {
     if (this.isStarted) {
       this.stack.push(this.started.children)
       this.head = this.started.children

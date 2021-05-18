@@ -5,21 +5,23 @@ type First<T extends readonly unknown[]> = T[0];
 type DropFirst<T extends readonly unknown[]> = T extends readonly [any?, ...infer U] ? U : [...T];
 
 export namespace Ast {
-  export type Grammar = Rule[]
-  export type Rule = [string, Expr]
+  export type GenericGrammar = Array<[string, GenericExpr]>
   export type GenericExpr = [string, ...(GenericExpr[]|GenericExpr|string|number)[]]
-  export type Expr = 
-      Ex.Seq 
-    | Ex.Alt 
+  export type Grammar<E extends GenericExpr = never> = Rule<Expr<E>>[]
+  export type Rule<E extends GenericExpr = never> = [string, Expr<E>]
+  export type Expr<E extends GenericExpr = never> = 
+      Ex.Seq<E>
+    | Ex.Alt<E>
     | Ex.Equal 
     | Ex.Rule 
-    | Ex.Times
+    | Ex.Times<E>
     | Ex.Token
-    | Ex.Not
-    | Ex.Project
+    | Ex.Not<E>
+    | Ex.Project<E>
     | Ex.Regex
     | Ex.Range
     | Ex.Anything
+    | E
 
   type ExprToStr<T> = T extends Expr[]
     ? string[]
@@ -54,14 +56,14 @@ export namespace Ast {
   }
 
   export namespace Ex {
-    export type Seq = ['seq', Expr[]]
-    export type Alt = ['alt', Expr[]]
+    export type Seq<E extends GenericExpr> = ['seq', Expr<E>[]]
+    export type Alt<E extends GenericExpr> = ['alt', Expr<E>[]]
     export type Equal = ['equal', string]
     export type Rule = ['rule', string]
-    export type Times = ['times', number, number, Expr]
+    export type Times<E extends GenericExpr> = ['times', number, number, Expr<E>]
     export type Token = ['token', string]
-    export type Not = ['not', Expr]
-    export type Project = ['project', string, Expr]
+    export type Not<E extends GenericExpr> = ['not', Expr<E>]
+    export type Project<E extends GenericExpr> = ['project', string, Expr<E>]
     export type Regex = ['regex', string]
     export type Range = ['range', string, string]
     export type Anything = ['anything']
