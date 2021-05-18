@@ -1,5 +1,5 @@
 import { State } from './state'
-import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceItem } from './types'
+import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceItem, IParseResult } from './types'
 import { Ast } from './grammar-ast'
 import * as equal from 'fast-deep-equal/es6'
 import { getRuleBodyByName } from './utils'
@@ -21,7 +21,7 @@ export class Parser implements Ast.IParser {
 
   public trace: Tracer = new Tracer()
 
-  protected grammar: Ast.GenericGrammar
+  public grammar: Ast.GenericGrammar
 
   protected projectors: IProjectors
 
@@ -186,7 +186,7 @@ export class Parser implements Ast.IParser {
 
   token = (token: string): IParserFn => {
     const e: Ast.Expr = ['seq', [
-      ['times', 0, null, ['regex', '\\s+']],
+      ['regex', '\\s*'],
       ['equal', token]
     ]]
     const parseFn = this.expr(e)
@@ -258,10 +258,14 @@ export class Parser implements Ast.IParser {
 
   // === API
 
-  match = (input: any[], rule: string): IMatchResult => {
+  matchExpr = (input: any[], rule: string): IParseResult => {
     this.state = new State(input)
     const p = this.expr(['rule', rule])
-    const res = p()
+    return p()
+  }
+  
+  match = (input: any[], rule: string): IMatchResult => {
+    const res = this.matchExpr(input, rule)
     return {
       success: res.success,
       isEof: this.state.isEof,

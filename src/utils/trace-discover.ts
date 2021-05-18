@@ -4,13 +4,13 @@ import { Compiler, Templates, TemplatesTrace } from "../ast2ometa";
 
 export class TraceDiscovery {
 
-  grammar: Ast.Grammar
+  grammar: Ast.GenericGrammar
   input: string
   trace: TraceItem[]
 
   compiler: Compiler
 
-  constructor (gr: Ast.Grammar, input: string, trace: TraceItem[]) {
+  constructor (gr: Ast.GenericGrammar, input: string, trace: TraceItem[]) {
     this.grammar = gr
     this.input = input
     this.trace = trace
