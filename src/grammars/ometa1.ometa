@@ -5,7 +5,7 @@ ometa Ometa1 {
   eTop    = eAlt,
   eAlt    = eProj ("|" eProj)*,
   eProj   = eSeq ("->" ident)?,
-  eSeq    = eQuant (spaces1 quant)*,
+  eSeq    = eQuant (spaces1 eQuant)*,
   eQuant  = eNot ('?' | '*' | '+')?,
   eNot    = '~'? operand,
 

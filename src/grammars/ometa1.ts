@@ -54,7 +54,7 @@ export const ometa1: AST.Grammar = [
   ]]],
   
   ['operand', ['alt', [
-    ['project', 'op_group', ['seq', [
+    ['project', 'opGroup', ['seq', [
       ['token', '('],
       ['rule', 'eTop'],
       ['token', ')'],
@@ -135,14 +135,16 @@ export const ometa1: AST.Grammar = [
 ]
 
 
-const x = (value) => value.map(i => i[2]).join('')
+const strMap = (value) => value.map(i => i[2]).join('')
+const rxMap = (value) => value.map(i => (i[1].length ? '\\' : '') + i[2]).join('')
+const internalRules = ['anything']
 
 export const proj: IProjectors = {
   ometa: ([_1, ident, _2, rules]) => rules,
   
   eRule: ([ident, _2, _3, _4, expr]) => [ident, expr],
   eAlt: ([first, rest]) => rest.length ? ['alt', [first, ...(rest.map(i => i[1]))]] : first,
-  eProj: ([value, proj]) => proj.length ? ['project', proj[1], value] : value,
+  eProj: ([expr, proj]) => proj.length ? ['project', proj[0][1], expr] : expr,
   eSeq: ([first, rest]) => rest.length ? ['seq', [first, ...(rest.map(i => i[1]))]] : first,
   eQuant: ([value, op]) => {
     if (op.length) {
@@ -156,12 +158,14 @@ export const proj: IProjectors = {
   },
   eNot: ([op, value]) => op.length ? ['not', value] : value,
 
-  opGroup: ([_1, value]) => ['seq', value],  
-  opRule: (ident) => ['rule', ident],
+  opGroup: ([_1, value]) => value, // What abount grouping as ['seq', value] ?
+  opRule: (ident) => internalRules.includes(ident as unknown as string) 
+    ? [ ident ] 
+    : ['rule', ident],
 
   eRange: ([_1, from, _2, to]) => ['range', from, to],
-  eStr: ([_1, value]) => ['equal', x(value)],
-  eToken: ([_1, value]) => ['token', x(value)],
-  eRegex: ([_1, value, _2, modif]) => ['regex', x(value)],
+  eStr: ([_1, value]) => ['equal', strMap(value)],
+  eToken: ([_1, value]) => ['token', strMap(value)],
+  eRegex: ([_1, value, _2, modif]) => ['regex', rxMap(value)],
   ident: ([_, first, rest]) => first + rest.join(''),
 }
