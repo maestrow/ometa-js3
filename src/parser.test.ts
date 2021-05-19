@@ -158,12 +158,23 @@ test('alt must backtrack when case is failed', () => {
   expect(r).succeedAt(p, 'c', 0)
 })
 
-test('times', () => {
-  const g: Grammar = [['main', ['times', 1, null, ['equal', 'a']]]]
-  const p = new TestParser(g)
-  const r = p.matchExpr('aaa' as unknown as any[], 'main')
-  expect(r).succeedAtEof(p, [ 'a', 'a', 'a' ])
+describe('times', () => {
+  test('times + {1,}', () => {
+    const g: Grammar = [['main', ['times', 1, null, ['equal', 'a']]]]
+    const p = new TestParser(g)
+    const r = p.matchExpr('aaa' as unknown as any[], 'main')
+    expect(r).succeedAtEof(p, [ 'a', 'a', 'a' ])
+  })
+
+  test('times * {0,} succeeded on zero matches and return empty array', () => {
+    const g: Grammar = [['main', ['times', 0, null, ['equal', 'a']]]]
+    const p = new TestParser(g)
+    const r = p.matchExpr('zzz' as unknown as any[], 'main')
+    expect(r).succeedAt(p, [], 0)
+  })
 })
+
+
 
 test('token', () => {
   const g: Grammar = [['main', ['token', 'aaaa']]]

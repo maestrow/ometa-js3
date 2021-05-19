@@ -135,18 +135,17 @@ export const ometa1: AST.Grammar = [
 ]
 
 
-const x = (value) => value.reduce((acc, i) => {
-  return acc + i[1]||[].join('') + i[2]
-}, '')
+const x = (value) => value.map(i => i[2]).join('')
 
 export const proj: IProjectors = {
-  ometa: ([_, ident, _2, rules]) => rules,
+  ometa: ([_1, ident, _2, rules]) => rules,
   
-  eAlt: ([first, rest]) => rest ? ['alt', [first, ...rest]] : first,
-  eProj: ([value, proj]) => proj ? ['project', proj[1], value] : value,
-  eSeq: ([first, rest]) => rest ? ['seq', [first, ...rest]] : first,
+  eRule: ([ident, _2, _3, _4, expr]) => [ident, expr],
+  eAlt: ([first, rest]) => rest.length ? ['alt', [first, ...(rest.map(i => i[1]))]] : first,
+  eProj: ([value, proj]) => proj.length ? ['project', proj[1], value] : value,
+  eSeq: ([first, rest]) => rest.length ? ['seq', [first, ...(rest.map(i => i[1]))]] : first,
   eQuant: ([value, op]) => {
-    if (op) {
+    if (op.length) {
       return op[0] === '*' ? ['times', 0, null, value] 
             : op[0] === '+' ? ['times', 1, null, value] 
             : op[0] === '?' ? ['times', 0, 1, value]
@@ -155,10 +154,10 @@ export const proj: IProjectors = {
       return value
     }
   },
-  eNot: ([op, value]) => op ? ['not', value] : value,
+  eNot: ([op, value]) => op.length ? ['not', value] : value,
 
   opGroup: ([_1, value]) => ['seq', value],  
-  opRule: ([ident]) => ['rule', ident],
+  opRule: (ident) => ['rule', ident],
 
   eRange: ([_1, from, _2, to]) => ['range', from, to],
   eStr: ([_1, value]) => ['equal', x(value)],

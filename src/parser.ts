@@ -175,7 +175,7 @@ export class Parser implements Ast.IParser {
           }
         } else {
           if (count >= min) {
-            return this.success(results.length === 0 ? undefined : results)
+            return this.success(results)
           } else {
             return this.fail()
           }
