@@ -1,11 +1,9 @@
 import * as fs from "fs";
 import { IMatchResult, Parser } from './parser'
-import { Ast } from './grammar-ast'
-import { math1 } from './grammars/math1'
-import { ometa1, proj } from './grammars/ometa1'
 import { TraceDiscovery } from "./utils/trace-discover";
 import { IParserFn } from "types";
 import * as equal from "fast-deep-equal/es6";
+import { Ast } from "grammar-ast";
 
 const printTrace = (p: Parser, input) => {
   const disco = new TraceDiscovery(p.grammar, input, p.trace.data)
@@ -26,20 +24,27 @@ const printRes = (p: Parser, res: IMatchResult) => {
   // console.dir(trace, {depth:1})
 }
 
-const input = fs.readFileSync('src/grammars/ometa1.ometa', 'utf-8')
-const p = new Parser(ometa1, proj)
-const r = p.match(input as unknown as any[], 'ometa')
+type Expr = 
+  | ['lr', Ast.Expr]
+type Grammar = Ast.Grammar<Expr>
 
-saveTrace(p, input)
+const g: Grammar = [
+  ['expr', ['lr', ['alt', [
+    ['seq', [
+      ['rule', 'expr'],
+      ['equal', '+'],
+      ['rule', 'num'],
+    ]],
+    ['rule', 'num']
+  ]]]],
+  ['num', ['range', '0', '9']]
+]
+
+const input = "1+2+3"
+const p = new Parser(g)
+const r = p.match(input as unknown as any[], 'expr')
+
+// saveTrace(p, input)
 printRes(p, r)
-const isEqual = equal(ometa1, r.result)
-
-console.log('\nDiff:\n')
-console.log('isEqual: ' + isEqual)
-
-fs.writeFileSync("./dist/diff_expected.json", JSON.stringify(ometa1, null, 2))
-fs.writeFileSync("./dist/diff_actual.json", JSON.stringify(r.result, null, 2))
-
-
 
 

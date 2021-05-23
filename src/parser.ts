@@ -15,6 +15,8 @@ export interface IMatchResult {
   result?: any
 }
 
+let counter = 0
+let memo: IParseResult
 export class Parser implements Ast.IParser {
 
   protected state: State
@@ -64,7 +66,7 @@ export class Parser implements Ast.IParser {
   // ToDo: translate Если ф-ция парсера вызывает другую ф-цию парсера, то успешный результат вложенного парсера нельзя пробрасывать наверх. 
   // Иначе может произойти двойной консум
 
-  @Memoize((...args) => JSON.stringify(args))
+  //@Memoize((...args) => JSON.stringify(args))
   expr (e: Ast.GenericExpr): IParserFn {
     const combinator = this[e[0]]
     if (typeof(combinator) !== 'function') {
@@ -89,6 +91,32 @@ export class Parser implements Ast.IParser {
     const e = getRuleBodyByName(name, this.grammar)
 
     return () => this.project(name, e)()
+  }
+
+  lr = (expr: Ast.GenericExpr) => {
+    const p = this.expr(expr)
+
+    return () => {
+      console.log(counter, memo)
+      if (counter === 0) {
+        counter++
+        let res = p()
+        memo = res
+        console.log(memo)
+        while (res.success) {
+          res = p()
+          if (res.success)
+            memo = res
+        }
+        return memo
+      } else if (counter === 1) {
+        counter++
+        return this.fail()
+      } else {
+        counter++
+        return memo
+      }
+    }
   }
 
   empty = (): IParserFn => () => {
