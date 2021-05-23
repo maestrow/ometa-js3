@@ -1,7 +1,7 @@
 import { State } from './state'
 import { IParseResultSuccess, IParseResultFail, IParserFn, IProjectors, ITraceItem, IParseResult } from './types'
 import { Ast } from './grammar-ast'
-import * as equal from 'fast-deep-equal/es6'
+import equal from 'fast-deep-equal/es6'
 import { getRuleBodyByName } from './utils'
 import { Tracer } from './tracer'
 import { Memoize } from 'typescript-memoize'
@@ -138,11 +138,12 @@ export class Parser implements Ast.IParser {
         let oldPos = pos
         let res = p()
         this.lrmemo.set(pos, expr, this.state.pos, res)
-        console.log(res)
+        
         while (res.success && this.state.pos > oldPos) {
           oldPos = this.state.pos
           this.state['_pos'] = pos
           res = p()
+          // console.log(res)
           if (res.success && this.state.pos > oldPos) {
             this.lrmemo.set(pos, expr, this.state.pos, res)
           }

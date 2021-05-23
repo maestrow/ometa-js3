@@ -1,0 +1,46 @@
+ometa OmetaLr {
+  ometa = "ometa" ident "{" rule* "}" spaces,
+  rule = ident "=" spaces "|"? expr inlSpaces ',' newline,
+
+  expr = 
+    | alt
+    | proj
+    | seq
+    | quant
+    | not
+    | expr2,
+
+  expr2 = 
+    | range  -> opRange
+    | str    -> opStr
+    | token  -> opToken
+    | regex  -> opRegex
+    | ident  -> opRule
+    | group  -> opGroup,
+
+  group  = "(" expr ")",
+  alt    = expr "|" expr,
+  proj   = expr "->" ident,
+  seq    = expr spaces1 expr,
+  quant  = expr2 ('?' | '*' | '+'),
+  not    = '~' expr2,
+
+  range  = spaces alphanum '-' alphanum,
+  str    = "'" (~'\'' '\\'? anything)* '\'',
+  token  = "\"" (~'"' '\\'? anything)* '"',
+  regex  = "/" (~'/' '\\'? anything)* '/' a-z*,
+
+  ident  = spaces letter alphanum*,
+
+  alphanum = letter | digit,
+  digit    = 0-9,
+  letter   = A-Z | a-z,
+
+  spaces     = /\s*/,
+  spaces1    = /\s+/,
+  space      = /\s/,
+  inlSpaces  = /[ \t]*/, 
+  inlSpaces1 = /[ \t]+/, 
+  inlSpace   = /[ \t]/,
+  newline    = /(\r\n)|\n/,
+}

@@ -21,6 +21,7 @@ export namespace Ast {
     | Ex.Regex
     | Ex.Range
     | Ex.Anything
+    | Ex.Lr<E>
     | E
 
   type ExprToStr<T> = T extends Expr[]
@@ -67,5 +68,6 @@ export namespace Ast {
     export type Regex = ['regex', string]
     export type Range = ['range', string, string]
     export type Anything = ['anything']
+    export type Lr<E extends GenericExpr> = ['lr', Expr<E>]
   }  
 }
