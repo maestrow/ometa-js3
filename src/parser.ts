@@ -8,6 +8,38 @@ import { Memoize } from 'typescript-memoize'
 
 const idFn = id => id
 
+
+type MemoEntry = {
+  res: IParseResult
+  pos: number
+}
+
+class LrMemo {
+  memo: Map<number, Map<string, MemoEntry>> = new Map()
+
+  private getKey = (expr: Ast.GenericExpr) => JSON.stringify(expr)
+
+  get = (pos: number, expr: Ast.GenericExpr): MemoEntry => {
+    const k = this.getKey(expr)
+    const posMem = this.memo.get(pos)
+    return posMem && posMem.get(k)
+  }
+
+  set = (currentPos: number, expr: Ast.GenericExpr, pos: number, res: IParseResult) => {
+    const k = this.getKey(expr)
+    if (!this.memo.has(currentPos)) {
+      this.memo.set(currentPos, new Map)
+    }
+    this.memo.get(currentPos).set(k, { pos, res })
+  }
+
+  has = (pos: number, expr: Ast.GenericExpr): boolean => {
+    const k = this.getKey(expr)
+    return this.memo.has(pos) && this.memo.get(pos).has(k)
+  }
+}
+
+
 export interface IMatchResult {
   success: boolean,
   isEof: boolean,
@@ -26,6 +58,8 @@ export class Parser implements Ast.IParser {
   public grammar: Ast.GenericGrammar
 
   protected projectors: IProjectors
+
+  lrmemo: LrMemo = new LrMemo()
 
   constructor(gr: Ast.GenericGrammar, proj: IProjectors = {}) {
     this.expr = this.expr.bind(this)
@@ -67,13 +101,13 @@ export class Parser implements Ast.IParser {
   // Иначе может произойти двойной консум
 
   //@Memoize((...args) => JSON.stringify(args))
-  expr (e: Ast.GenericExpr): IParserFn {
+  expr(e: Ast.GenericExpr): IParserFn {
     const combinator = this[e[0]]
-    if (typeof(combinator) !== 'function') {
+    if (typeof (combinator) !== 'function') {
       throw new Error(`There is no core combinator with name: '${e[0]}'`)
     }
     const fn: IParserFn = combinator.apply(this, e.slice(1))
-    
+
     return () => {
       this.trace.start(e, this.state.pos)
       const res = fn()
@@ -86,7 +120,7 @@ export class Parser implements Ast.IParser {
   }
 
   // === Parsers
-  
+
   rule = (name: string): IParserFn => {
     const e = getRuleBodyByName(name, this.grammar)
 
@@ -97,27 +131,32 @@ export class Parser implements Ast.IParser {
     const p = this.expr(expr)
 
     return () => {
-      console.log(counter, memo)
-      if (counter === 0) {
-        counter++
+      const pos = this.state.pos
+      const m = this.lrmemo.get(pos, expr)
+      if (!m) {
+        this.lrmemo.set(pos, expr, pos, this.fail())
+        let oldPos = pos
         let res = p()
-        memo = res
-        console.log(memo)
-        while (res.success) {
+        this.lrmemo.set(pos, expr, this.state.pos, res)
+        console.log(res)
+        while (res.success && this.state.pos > oldPos) {
+          oldPos = this.state.pos
+          this.state['_pos'] = pos
           res = p()
-          if (res.success)
-            memo = res
+          if (res.success && this.state.pos > oldPos) {
+            this.lrmemo.set(pos, expr, this.state.pos, res)
+          }
         }
-        return memo
-      } else if (counter === 1) {
-        counter++
-        return this.fail()
+        const m2 = this.lrmemo.get(pos, expr)
+        this.state['_pos'] = m2.pos
+        return m2.res
       } else {
-        counter++
-        return memo
+        this.state['_pos'] = m.pos
+        return m.res
       }
     }
   }
+
 
   empty = (): IParserFn => () => {
     return this.success()
@@ -131,7 +170,7 @@ export class Parser implements Ast.IParser {
   }
 
   equal = (item: any): IParserFn => () => {
-    if (this.state.isString && typeof(item) === 'string') {
+    if (this.state.isString && typeof (item) === 'string') {
       if (this.state.pos + item.length <= this.state.len) {
         const excerpt = this.state.inputAsString.substr(this.state.pos, item.length)
         if (excerpt === item) {
@@ -146,9 +185,9 @@ export class Parser implements Ast.IParser {
     return this.fail()
   }
 
-  seq = (exprs: Ast.GenericExpr[]): IParserFn => { 
+  seq = (exprs: Ast.GenericExpr[]): IParserFn => {
     const parsers = exprs.map(this.expr)
-    
+
     return () => {
       const results: any[] = []
       this.savePos()
@@ -165,9 +204,9 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  alt = (exprs: Ast.GenericExpr[]): IParserFn => { 
+  alt = (exprs: Ast.GenericExpr[]): IParserFn => {
     const parsers = exprs.map(this.expr)
-    
+
     return () => {
       for (let i = 0; i < exprs.length; i++) {
         this.savePos();
@@ -182,7 +221,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  times = (min: number, max: number, expr: Ast.GenericExpr): IParserFn => { 
+  times = (min: number, max: number, expr: Ast.GenericExpr): IParserFn => {
     if (max === null || max === undefined)
       max = Infinity
     if (max < 1) {
@@ -218,7 +257,7 @@ export class Parser implements Ast.IParser {
       ['equal', token]
     ]]
     const parseFn = this.expr(e)
-    
+
     return () => {
       const r = parseFn()
       if (r.success) {
@@ -228,7 +267,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  not = (expr: Ast.GenericExpr): IParserFn => { 
+  not = (expr: Ast.GenericExpr): IParserFn => {
     const p = this.expr(expr)
 
     return () => {
@@ -239,7 +278,7 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  project = (projector: string, expr: Ast.GenericExpr): IParserFn => { 
+  project = (projector: string, expr: Ast.GenericExpr): IParserFn => {
     const p = this.expr(expr)
 
     return () => {
@@ -291,7 +330,7 @@ export class Parser implements Ast.IParser {
     const p = this.expr(['rule', rule])
     return p()
   }
-  
+
   match = (input: any[], rule: string): IMatchResult => {
     const res = this.matchExpr(input, rule)
     return {
