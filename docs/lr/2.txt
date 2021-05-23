@@ -1,0 +1,69 @@
+term = 
+  | term "+" fact
+  | term "-" fact
+  | fact
+fact = 
+  | fact "*" num
+  | fact "/" num
+  | num
+
+i = 1+2-2/3*3-9
+
+match(i, 'term')
+
+term
+  term "+" fact -> fail
+    term -> lr, fail
+  term "-" fact
+    term -> lr, fail
+  fact
+    fact "*" num
+      fact -> lr, fail
+    fact "/" num   
+      fact -> lr, fail
+    num -> 1
+    .grow(fact) [term, fact]
+
+
+Пример: 
+
+a = b
+b = expr
+expr = a '+' num | num
+
+1+2+3
+
+a: m(a,0)=null; m <- lr(fail)
+  b:
+    expr:
+      a: m=(a, 0); m is lr; m.evalSet <- [a, b]
+        -> fail
+      num -> 1
+      -> 1
+    -> 1
+  m.ans <- 1; grow(a, 0)
+
+
+Пример: вот зачем для Recall нужен evalSet. involvedSet - это не весь стек вызовов, а только его рекурсивная часть, например для D - это DEF.
+
+A = B
+B = C
+C = A '+' c | D | c
+D = E
+E = F
+F = D '-' f | f
+
+Пример: вот когда возможен одновременный growLr: для A и для D. 
+
+A = B
+B = C
+C = A '+' D | c
+D = E
+E = F
+F = D '-' f | f
+
+
+Пример: Одновременный grow для A. Отличие только в позиции.
+
+1+2+3
+A = A '+' A | num

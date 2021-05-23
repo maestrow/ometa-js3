@@ -30,7 +30,6 @@ type LR = {
   type: 'lr'
   rule: string
   seed: IParseResult
-  next?: LR
   head?: Head
 }
 
@@ -54,10 +53,9 @@ interface Memo {
 // ############################################################################
 // ### Functions
 
-const makeLR = (rule: string, next: LR, seed: IParseResult = {success: false}): LR => ({
+const makeLR = (rule: string, seed: IParseResult = {success: false}): LR => ({
   type: 'lr',
   rule,
-  next,
   seed,
 })
 
@@ -89,7 +87,7 @@ class Parser {
 
   memo: Memo
   state: State
-  lrStack: LR[] = []
+  rulesStack: string[] = []
   heads: Map<number, Head> = new Map()
 
   protected success(result: any = null, consumed: number = 0): IParseResultSuccess {
@@ -116,13 +114,6 @@ class Parser {
 
   // LR functions
 
-  get lrhead(): LR {
-    if(this.lrStack.length === 0) {
-      return null
-    }
-    return this.lrStack[this.lrStack.length-1]
-  }
-
   growLr = (rule: string, m: ANS): IParseResult => {
     let pos = this.state.pos
     let res: IParseResult
@@ -138,8 +129,8 @@ class Parser {
 
   setupLr = (rule: string, lr: LR) => {
     lr.head = makeHead(rule)
-    for (let i = this.lrStack.length-1; i >=0 ; i--) {
-      const stEl = this.lrStack[i];
+    for (let i = this.rulesStack.length-1; i >=0 ; i--) {
+      const stEl = this.rulesStack[i];
       if (stEl.rule === rule) {
         break
       }
@@ -195,13 +186,13 @@ class Parser {
     const m = this.recall(rule, pos)
     
     if (!m) {
-      const lr = makeLR(rule, this.lrhead) // fail
+      const lr = makeLR(rule) // fail
       
 
-      this.lrStack.push(lr)
+      this.rulesStack.push(rule)
       this.memo.set(rule, pos, lr)
       const res = this.eval(rule)
-      this.lrStack.pop()
+      this.rulesStack.pop()
       
       if (lr.head) {
         lr.seed = res

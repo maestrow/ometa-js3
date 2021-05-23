@@ -1,0 +1,36 @@
+x = expr
+expr = x '+' num | num
+
+1+2+3
+
+1. apply('x', 0), memo == null
+memo('x', 0) <- LR(false)
+
+2. apply('expr', 0), memo == null
+memo('expr', 0) <- RL(false) 
+
+3. apply('x', 0), memo == RL(false)
+memo('x', 0) <- LR(true)
+
+expr вычисляется как num -> 1
+memo('expr', 0) = 1
+
+x вычисляется как 1
+memo('x', 0) = 1
+
+
+Grow-LR(R,P,M,H)
+  Heads(P) <- H   // Indicates that left recursion growth is in progress
+  while true do
+    Pos <- P
+    H.evalSet <- Copy(H.involvedSet)  // For each cycle of growth, the involved rules are given a fresh opportunity for evaluation.
+    let ans = Eval(R.body)
+    if ans == fail or Pos <= M.pos then 
+      break
+    M.ans <- ans
+    M.pos <- Pos
+
+  Heads(P) <- NIL // when left recursion growth is completed, the head at the left recursion position must be removed
+  Pos <- M.pos
+  return M.ans
+
