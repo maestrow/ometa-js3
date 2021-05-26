@@ -7,6 +7,7 @@ export type IParseResultSuccess = {
 
 export type IParseResultFail = {
   success: false
+  message?: string
 }
 
 export type IParseResult = IParseResultSuccess | IParseResultFail
