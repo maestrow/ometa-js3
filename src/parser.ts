@@ -76,9 +76,10 @@ export class Parser implements Ast.IParser {
     }
   }
 
-  protected fail(): IParseResultFail {
+  protected fail(message?: string): IParseResultFail {
     return {
-      success: false
+      success: false,
+      message
     }
   }
 
